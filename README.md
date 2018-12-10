@@ -29,9 +29,8 @@ message EchoResponse {
 
 ```
 
-After compile it with grpcio-tools, you get *_pb2.py and *_pb2_grpc.py files, now you can initialize your fixtures.
+After compile it with grpcio-tools, you get *_pb2.py and *_pb2_grpc.py files, now you can write your service.
 
-Create service declaration:
 ```python
 from stub.test_pb2 import EchoRequest, EchoResponse
 from stub.test_pb2_grpc import EchoServiceServicer
@@ -40,9 +39,12 @@ from stub.test_pb2_grpc import EchoServiceServicer
 class Servicer(EchoServiceServicer):
     def handler(self, request: EchoRequest, context) -> EchoResponse:
         return EchoResponse(name=f'test-{request.name}')
+
+    def error_handler(self, request: EchoRequest, context) -> EchoResponse:
+        raise RuntimeError('Some error')
 ```
 
-Write little tests
+Point pytest with your stubs and service:
 
 ```python
 import pytest
@@ -69,7 +71,10 @@ def grpc_stub(grpc_channel):
     from stub.test_pb2_grpc import EchoServiceStub
 
     return EchoServiceStub(grpc_channel)
+```
 
+Write little test:
+```python
 
 def test_some(grpc_stub):
     request = EchoRequest()
@@ -77,6 +82,11 @@ def test_some(grpc_stub):
 
     assert response.name == f'test-{request.name}'
 
+def test_example(grpc_stub):
+    request = EchoRequest()
+    response = grpc_stub.error_handler(request)
+
+    assert response.name == f'test-{request.name}'
 ``` 
 
 ## Run tests agains real gRPC server
