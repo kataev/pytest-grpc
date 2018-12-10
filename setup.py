@@ -6,7 +6,7 @@ install_requires = ["pytest>=3.6.0"]
 setup(
     name="pytest-grpc",
     license="MIT",
-    version='0.1.0',
+    version='0.2.0',
     author="Denis Kataev",
     author_email="denis.a.kataev@gmail.com",
     url="",
