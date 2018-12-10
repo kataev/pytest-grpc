@@ -1,0 +1,5 @@
+.tox
+.hypothesis
+build
+dist
+*.egg-info/
