@@ -64,7 +64,7 @@ def grpc_addr():
 
 @pytest.fixture(scope='module')
 def _grpc_server(request, grpc_addr, grpc_add_to_server, grpc_servicer):
-    if request.config.getoption('fake'):
+    if request.config.getoption('grpc-fake'):
         server = FakeServer()
         grpc_add_to_server(grpc_servicer, server)
         yield server
@@ -81,7 +81,7 @@ def _grpc_server(request, grpc_addr, grpc_add_to_server, grpc_servicer):
 
 @pytest.fixture(scope='module')
 def grpc_channel(request, _grpc_server, grpc_addr):
-    if request.config.getoption('fake'):
+    if request.config.getoption('grpc-fake'):
         yield FakeChannel(_grpc_server)
     else:
 
@@ -89,3 +89,7 @@ def grpc_channel(request, _grpc_server, grpc_addr):
         with grpc.insecure_channel(grpc_addr) as channel:
             yield channel
         _grpc_server.stop(grace=None)
+
+
+def pytest_addoption(parser):
+    parser.addoption('--grpc-fake-server', action='store_true', dest='grpc-fake')
