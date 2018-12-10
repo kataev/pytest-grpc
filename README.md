@@ -2,6 +2,11 @@
 
 Write test for gRPC with pytest.
 
+
+## Exmaple
+
+See example dir and/or read 'usage'.
+
 ## Usage
 
 For example you have some proto file with rpc declaration.
