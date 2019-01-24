@@ -63,7 +63,12 @@ def grpc_addr():
 
 
 @pytest.fixture(scope='module')
-def _grpc_server(request, grpc_addr, grpc_add_to_server, grpc_servicer):
+def grpc_interceptors():
+    return
+
+
+@pytest.fixture(scope='module')
+def _grpc_server(request, grpc_addr, grpc_add_to_server, grpc_servicer, grpc_interceptors):
     if request.config.getoption('grpc-fake'):
         server = FakeServer()
         grpc_add_to_server(grpc_servicer, server)
@@ -71,7 +76,7 @@ def _grpc_server(request, grpc_addr, grpc_add_to_server, grpc_servicer):
     else:
         pool = futures.ThreadPoolExecutor(max_workers=1)
 
-        server = grpc.server(pool)
+        server = grpc.server(pool, interceptors=grpc_interceptors)
         grpc_add_to_server(grpc_servicer, server)
 
         server.add_insecure_port(grpc_addr)
