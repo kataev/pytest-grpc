@@ -13,7 +13,7 @@ patch:
 	bumpversion patch
 
 publish:
-	pip install wheel twine
+	pip3 install wheel twine
 	python3 setup.py sdist bdist_wheel
 	twine upload dist/*
 
