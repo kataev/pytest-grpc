@@ -21,9 +21,21 @@ class FakeServer(object):
         pass
 
 
+class FakeRpcError(RuntimeError, grpc.RpcError):
+    def __init__(self, code, details):
+        self._code = code
+        self._details = details
+
+    def code(self):
+        return self._code
+
+    def details(self):
+        return self._details
+
+
 class FakeContext(object):
-    def abort(self, status_code, message):
-        raise RuntimeError('Stop with %s - %s' % (status_code, message))
+    def abort(self, code, details):
+        raise FakeRpcError(code, details)
 
 
 class FakeChannel:
