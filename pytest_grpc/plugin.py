@@ -1,7 +1,9 @@
-import grpc
-import pytest
 import socket
 from concurrent import futures
+
+import grpc
+import pytest
+from grpc._cython.cygrpc import CompositeChannelCredentials, _Metadatum
 
 
 class FakeServer(object):
@@ -20,6 +22,12 @@ class FakeServer(object):
     def stop(self, grace=None):
         pass
 
+    def add_secure_port(self, target, server_credentials):
+        pass
+
+    def add_insecure_port(self, target):
+        pass
+
 
 class FakeRpcError(RuntimeError, grpc.RpcError):
     def __init__(self, code, details):
@@ -34,44 +42,62 @@ class FakeRpcError(RuntimeError, grpc.RpcError):
 
 
 class FakeContext(object):
+    def __init__(self):
+        self._invocation_metadata = []
+
     def abort(self, code, details):
         raise FakeRpcError(code, details)
 
+    def invocation_metadata(self):
+        return self._invocation_metadata
+
 
 class FakeChannel:
-    def __init__(self, fake_server):
+    def __init__(self, fake_server, credentials):
         self.server = fake_server
+        self._credentials = credentials
 
+    def __enter__(self):
+        return self
 
-for method_name in ['unary_unary', 'unary_stream', 'stream_unary', 'stream_stream']:
-    def fake_method(name):
-        def method(self, uri, *args, **kwargs):
-            handler = self.server.handlers[uri]
-            real_method = getattr(handler, name)
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
-            def fake_handler(request):
-                context = FakeContext()
-                return real_method(request, context)
+    def fake_method(self, method_name, uri, *args, **kwargs):
+        handler = self.server.handlers[uri]
+        real_method = getattr(handler, method_name)
 
-            return fake_handler
+        def fake_handler(request):
+            context = FakeContext()
 
-        method.__name__ = method_name
-        setattr(FakeChannel, method_name, method)
+            def metadata_callbak(metadata, error):
+                context._invocation_metadata += [_Metadatum(k, v) for k, v in metadata]
 
-        return method
+            if self._credentials and isinstance(self._credentials._credentials, CompositeChannelCredentials):
+                for call_cred in self._credentials._credentials._call_credentialses:
+                    call_cred._metadata_plugin._metadata_plugin(context, metadata_callbak)
+            return real_method(request, context)
 
+        return fake_handler
 
-    fake_method(method_name)
+    def unary_unary(self, *args, **kwargs):
+        return self.fake_method('unary_unary', *args, **kwargs)
 
-del fake_method, method_name
+    def unary_stream(self, *args, **kwargs):
+        return self.fake_method('unary_stream', *args, **kwargs)
+
+    def stream_unary(self, *args, **kwargs):
+        return self.fake_method('stream_unary', *args, **kwargs)
+
+    def stream_stream(self, *args, **kwargs):
+        return self.fake_method('stream_stream', *args, **kwargs)
 
 
 @pytest.fixture(scope='module')
 def grpc_addr():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind(('', 0))
-
-    return '{}:{}'.format(*sock.getsockname())
+    sock.bind(('localhost', 0))
+    return 'localhost:{}'.format(sock.getsockname()[1])
 
 
 @pytest.fixture(scope='module')
@@ -87,25 +113,35 @@ def _grpc_server(request, grpc_addr, grpc_add_to_server, grpc_servicer, grpc_int
         yield server
     else:
         pool = futures.ThreadPoolExecutor(max_workers=1)
-
         server = grpc.server(pool, interceptors=grpc_interceptors)
         grpc_add_to_server(grpc_servicer, server)
-
-        server.add_insecure_port(grpc_addr)
         yield server
         pool.shutdown(wait=False)
 
 
 @pytest.fixture(scope='module')
-def grpc_channel(request, _grpc_server, grpc_addr):
-    if request.config.getoption('grpc-fake'):
-        yield FakeChannel(_grpc_server)
-    else:
+def grpc_server(_grpc_server, grpc_addr):
+    _grpc_server.add_insecure_port(grpc_addr)
+    _grpc_server.start()
+    yield _grpc_server
+    _grpc_server.stop(grace=None)
 
-        _grpc_server.start()
-        with grpc.insecure_channel(grpc_addr) as channel:
-            yield channel
-        _grpc_server.stop(grace=None)
+
+@pytest.fixture(scope='module')
+def create_channel(request, grpc_addr, grpc_server):
+    def _create_channel(credentials=None, options=None):
+        if request.config.getoption('grpc-fake'):
+            return FakeChannel(grpc_server, credentials)
+        if credentials is not None:
+            return grpc.secure_channel(grpc_addr, credentials, options)
+        return grpc.insecure_channel(grpc_addr, options)
+
+    return _create_channel
+
+
+@pytest.fixture(scope='module')
+def grpc_channel(create_channel):
+    yield create_channel()
 
 
 def pytest_addoption(parser):
