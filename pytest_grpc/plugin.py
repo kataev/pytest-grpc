@@ -71,7 +71,7 @@ class FakeChannel:
             context = FakeContext()
 
             def metadata_callbak(metadata, error):
-                context._invocation_metadata += [_Metadatum(k, v) for k, v in metadata]
+                context._invocation_metadata.extend((_Metadatum(k, v) for k, v in metadata))
 
             if self._credentials and isinstance(self._credentials._credentials, CompositeChannelCredentials):
                 for call_cred in self._credentials._credentials._call_credentialses:
@@ -141,7 +141,13 @@ def create_channel(request, grpc_addr, grpc_server):
 
 @pytest.fixture(scope='module')
 def grpc_channel(create_channel):
-    yield create_channel()
+    with create_channel() as channel:
+        yield channel
+
+
+@pytest.fixture(scope='module')
+def grpc_stub(grpc_stub_cls, grpc_channel):
+    return grpc_stub_cls(grpc_channel)
 
 
 def pytest_addoption(parser):

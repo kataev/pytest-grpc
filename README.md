@@ -72,10 +72,10 @@ def grpc_servicer():
 
 
 @pytest.fixture(scope='module')
-def grpc_stub(grpc_channel):
+def grpc_stub_cls(grpc_channel):
     from stub.test_pb2_grpc import EchoServiceStub
 
-    return EchoServiceStub(grpc_channel)
+    return EchoServiceStub
 ```
 
 Write little test:
@@ -93,6 +93,100 @@ def test_example(grpc_stub):
 
     assert response.name == f'test-{request.name}'
 ``` 
+
+#### Testing secure server
+
+```python
+from pathlib import Path
+import pytest
+import grpc
+
+@pytest.fixture(scope='module')
+def grpc_add_to_server():
+    from stub.test_pb2_grpc import add_EchoServiceServicer_to_server
+
+    return add_EchoServiceServicer_to_server
+
+
+@pytest.fixture(scope='module')
+def grpc_servicer():
+    from servicer import Servicer
+
+    return Servicer()
+
+
+@pytest.fixture(scope='module')
+def grpc_stub_cls(grpc_channel):
+    from stub.test_pb2_grpc import EchoServiceStub
+
+    return EchoServiceStub
+
+
+@pytest.fixture(scope='session')
+def my_ssl_key_path():
+    return Path('/path/to/key.pem')
+
+
+@pytest.fixture(scope='session')
+def my_ssl_cert_path():
+    return Path('/path/to/cert.pem')
+
+
+@pytest.fixture(scope='module')
+def grpc_server(_grpc_server, grpc_addr, my_ssl_key_path, my_ssl_cert_path):
+    """
+    Overwrites default `grpc_server` fixture with ssl credentials
+    """
+    credentials = grpc.ssl_server_credentials([
+        (my_ssl_key_path.read_bytes(),
+         my_ssl_cert_path.read_bytes())
+    ])
+
+    _grpc_server.add_secure_port(grpc_addr, server_credentials=credentials)
+    _grpc_server.start()
+    yield _grpc_server
+    _grpc_server.stop(grace=None)
+
+
+@pytest.fixture(scope='module')
+def my_channel_ssl_credentials(my_ssl_cert_path):
+    # If we're using self-signed certificate it's necessarily to pass root certificate to channel
+    return grpc.ssl_channel_credentials(
+        root_certificates=my_ssl_cert_path.read_bytes()
+    )
+
+
+@pytest.fixture(scope='module')
+def grpc_channel(my_channel_ssl_credentials, create_channel):
+    """
+    Overwrites default `grpc_channel` fixture with ssl credentials
+    """
+    with create_channel(my_channel_ssl_credentials) as channel:
+        yield channel
+
+        
+@pytest.fixture(scope='module')
+def grpc_authorized_channel(my_channel_ssl_credentials, create_channel):
+    """
+    Channel with authorization header passed
+    """
+    grpc_channel_credentials = grpc.access_token_call_credentials("some_token")
+    composite_credentials = grpc.composite_channel_credentials(
+        my_channel_ssl_credentials,
+        grpc_channel_credentials
+    )
+    with create_channel(composite_credentials) as channel:
+        yield channel
+    
+    
+@pytest.fixture(scope='module')
+def my_authorized_stub(grpc_stub_cls, grpc_channel):
+    """
+    Stub with authorized channel
+    """
+    return grpc_stub_cls(grpc_channel)
+
+```
 
 ## Run tests agains real gRPC server
 Run tests against read grpc server worked in another thread:
