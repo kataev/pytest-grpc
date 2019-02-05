@@ -128,7 +128,7 @@ def grpc_server(_grpc_server, grpc_addr):
 
 
 @pytest.fixture(scope='module')
-def create_channel(request, grpc_addr, grpc_server):
+def grpc_create_channel(request, grpc_addr, grpc_server):
     def _create_channel(credentials=None, options=None):
         if request.config.getoption('grpc-fake'):
             return FakeChannel(grpc_server, credentials)
@@ -140,8 +140,8 @@ def create_channel(request, grpc_addr, grpc_server):
 
 
 @pytest.fixture(scope='module')
-def grpc_channel(create_channel):
-    with create_channel() as channel:
+def grpc_channel(grpc_create_channel):
+    with grpc_create_channel() as channel:
         yield channel
 
 
