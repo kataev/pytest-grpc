@@ -8,13 +8,13 @@ from grpc._cython.cygrpc import CompositeChannelCredentials, _Metadatum
 
 class FakeServer(object):
     def __init__(self):
-        self.handlers = None
+        self.handlers = {}
 
     def add_generic_rpc_handlers(self, generic_rpc_handlers):
         from grpc._server import _validate_generic_rpc_handlers
         _validate_generic_rpc_handlers(generic_rpc_handlers)
 
-        self.handlers = generic_rpc_handlers[0]._method_handlers
+        self.handlers.update(generic_rpc_handlers[0]._method_handlers)
 
     def start(self):
         pass
@@ -106,21 +106,20 @@ def grpc_interceptors():
 
 
 @pytest.fixture(scope='module')
-def _grpc_server(request, grpc_addr, grpc_add_to_server, grpc_servicer, grpc_interceptors):
+def _grpc_server(request, grpc_addr, grpc_interceptors):
     if request.config.getoption('grpc-fake'):
         server = FakeServer()
-        grpc_add_to_server(grpc_servicer, server)
         yield server
     else:
         pool = futures.ThreadPoolExecutor(max_workers=1)
         server = grpc.server(pool, interceptors=grpc_interceptors)
-        grpc_add_to_server(grpc_servicer, server)
         yield server
         pool.shutdown(wait=False)
 
 
 @pytest.fixture(scope='module')
-def grpc_server(_grpc_server, grpc_addr):
+def grpc_server(_grpc_server, grpc_addr, grpc_add_to_server, grpc_servicer):
+    grpc_add_to_server(grpc_servicer, _grpc_server)
     _grpc_server.add_insecure_port(grpc_addr)
     _grpc_server.start()
     yield _grpc_server
