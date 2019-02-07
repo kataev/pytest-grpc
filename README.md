@@ -3,7 +3,7 @@
 Write test for gRPC with pytest.
 
 
-## Exmaple
+## Example
 
 See example dir and/or read 'usage'.
 
