@@ -109,7 +109,7 @@ def grpc_interceptors():
 
 @pytest.fixture(scope='module')
 def _grpc_server(request, grpc_addr, grpc_interceptors):
-    max_workers = request.config.getoption('grpc-max-workers', default=1)
+    max_workers = request.config.getoption('grpc-max-workers')
     try:
         max_workers = max(request.module.grpc_max_workers, max_workers)
     except AttributeError:
@@ -158,4 +158,4 @@ def grpc_stub(grpc_stub_cls, grpc_channel):
 
 def pytest_addoption(parser):
     parser.addoption('--grpc-fake-server', action='store_true', dest='grpc-fake')
-    parser.addoption('--grpc-max-workers', type=int, dest='grpc-max-workers')
+    parser.addoption('--grpc-max-workers', type=int, dest='grpc-max-workers', default=1)
