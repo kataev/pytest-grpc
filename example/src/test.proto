@@ -9,6 +9,12 @@ service EchoService {
 
     rpc error_handler(EchoRequest) returns (EchoResponse) {
     }
+
+	rpc blocking(Empty) returns (stream EchoResponse) {
+	}
+
+	rpc unblock(Empty) returns (Empty) {
+	}
 }
 
 
@@ -18,4 +24,7 @@ message EchoRequest {
 
 message EchoResponse {
     string name = 1;
+}
+
+message Empty {
 }
