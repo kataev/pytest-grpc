@@ -76,7 +76,7 @@ class FakeChannel:
             if self._credentials and isinstance(self._credentials._credentials, CompositeChannelCredentials):
                 for call_cred in self._credentials._credentials._call_credentialses:
                     call_cred._metadata_plugin._metadata_plugin(context, metadata_callbak)
-            return real_method(request, context)
+            return real_method(handler, request, context)
 
         return fake_handler
 
