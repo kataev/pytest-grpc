@@ -188,7 +188,7 @@ def my_authorized_stub(grpc_stub_cls, grpc_channel):
 
 ```
 
-## Run tests agains real gRPC server
+## Run tests against real gRPC server
 Run tests against read grpc server worked in another thread:
 
 ```bash
@@ -293,3 +293,11 @@ E       RuntimeError: Some error
 example/src/servicer.py:10: RuntimeError
 =============== 1 failed, 1 passed, 1 warnings in 0.10 seconds ================
 ```
+
+## Run the servicer on multiple threads
+The number of workers threads for gRPC can be specified in two ways:
+
+  - add `--grpc-max-workers=<n>` to the arguments
+  - test modules can also use a `grpc_max_workers=<n>` variable
+
+See `test_blocking` in example.

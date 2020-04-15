@@ -7,8 +7,9 @@ from grpc._cython.cygrpc import CompositeChannelCredentials, _Metadatum
 
 
 class FakeServer(object):
-    def __init__(self):
+    def __init__(self, pool):
         self.handlers = {}
+        self.pool = pool
 
     def add_generic_rpc_handlers(self, generic_rpc_handlers):
         from grpc._server import _validate_generic_rpc_handlers
@@ -76,7 +77,8 @@ class FakeChannel:
             if self._credentials and isinstance(self._credentials._credentials, CompositeChannelCredentials):
                 for call_cred in self._credentials._credentials._call_credentialses:
                     call_cred._metadata_plugin._metadata_plugin(context, metadata_callbak)
-            return real_method(request, context)
+            future = self.server.pool.submit(real_method, request, context)
+            return future.result()
 
         return fake_handler
 
@@ -107,14 +109,19 @@ def grpc_interceptors():
 
 @pytest.fixture(scope='module')
 def _grpc_server(request, grpc_addr, grpc_interceptors):
+    max_workers = request.config.getoption('grpc-max-workers')
+    try:
+        max_workers = max(request.module.grpc_max_workers, max_workers)
+    except AttributeError:
+        pass
+    pool = futures.ThreadPoolExecutor(max_workers=max_workers)
     if request.config.getoption('grpc-fake'):
-        server = FakeServer()
+        server = FakeServer(pool)
         yield server
     else:
-        pool = futures.ThreadPoolExecutor(max_workers=1)
         server = grpc.server(pool, interceptors=grpc_interceptors)
         yield server
-        pool.shutdown(wait=False)
+    pool.shutdown(wait=False)
 
 
 @pytest.fixture(scope='module')
@@ -151,3 +158,4 @@ def grpc_stub(grpc_stub_cls, grpc_channel):
 
 def pytest_addoption(parser):
     parser.addoption('--grpc-fake-server', action='store_true', dest='grpc-fake')
+    parser.addoption('--grpc-max-workers', type=int, dest='grpc-max-workers', default=1)
