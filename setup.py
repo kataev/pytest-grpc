@@ -4,7 +4,7 @@ install_requires = ["pytest>=3.6.0"]
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
-    
+
 setup(
     name="pytest-grpc",
     license="MIT",
