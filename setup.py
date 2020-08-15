@@ -11,7 +11,7 @@ setup(
     version='0.8.0',
     author="Denis Kataev",
     author_email="denis.a.kataev@gmail.com",
-    url="",
+    url="https://github.com/kataev/pytest-grpc",
     platforms=["linux", "osx", "win32"],
     packages=find_packages(),
     entry_points={
