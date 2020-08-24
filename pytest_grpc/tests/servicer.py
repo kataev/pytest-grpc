@@ -1,5 +1,5 @@
-from stub.test_pb2 import EchoRequest, EchoResponse, Empty
-from stub.test_pb2_grpc import EchoServiceServicer
+from .example_pb2 import EchoRequest, EchoResponse, Empty
+from .example_pb2_grpc import EchoServiceServicer
 import threading
 
 

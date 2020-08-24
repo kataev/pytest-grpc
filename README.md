@@ -5,7 +5,7 @@ Write test for gRPC with pytest.
 
 ## Example
 
-See example dir and/or read 'usage'.
+See `pytest_grpc/tests` dir and/or read 'usage'.
 
 ## Usage
 
