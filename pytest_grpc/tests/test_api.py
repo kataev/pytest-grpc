@@ -1,6 +1,7 @@
 import pytest
 import grpc
 import threading
+import asyncio
 
 from .example_pb2 import EchoRequest, Empty
 from .servicer import Servicer
@@ -46,3 +47,18 @@ def test_blocking(grpc_stub, grpc_server):
     for resp in stream:
         pass
     t.join()
+
+
+# Asynchronous Stub and Asynchronous Server
+
+@pytest.mark.asyncio
+async def test_some_async(aio_grpc_stub, aio_grpc_server):
+    request = EchoRequest()
+    response = await aio_grpc_stub.handler(request)
+    assert response.name == f'test-{request.name}'
+
+@pytest.mark.asyncio
+async def test_error_async(aio_grpc_stub, aio_grpc_server):
+    request = EchoRequest()
+    with pytest.raises(grpc.RpcError):
+        response = await aio_grpc_stub.error_handler(request)
