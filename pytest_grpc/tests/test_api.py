@@ -77,3 +77,16 @@ async def test_blocking_async(event_loop, aio_grpc_stub, aio_grpc_server):
         call_unblock(),
         call_block(),
     )
+
+
+# Incorrect fixtures requested
+
+@pytest.mark.xfail(strict=True)
+@pytest.mark.asyncio
+async def test_sync_fixture_async_test(grpc_stub, grpc_server):
+    pass
+
+
+@pytest.mark.xfail(strict=True)
+def test_async_fixture_sync_test(aio_grpc_stub, aio_grpc_server):
+    pass
