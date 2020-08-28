@@ -1,11 +1,19 @@
 import pytest
 import grpc
-import threading
 import asyncio
+import packaging
+import threading
+import pytest_grpc
 
 from .example_pb2 import EchoRequest, Empty
 from .servicer import Servicer
 from .example_pb2_grpc import add_EchoServiceServicer_to_server, EchoServiceStub
+
+
+aio_available = pytest.mark.skipif(
+    packaging.version.parse(grpc.__version__) < packaging.version.parse("1.31.0"),
+    reason="aio test only work with grpcio versions 1.31.0 and later"
+)
 
 
 @pytest.fixture
@@ -51,18 +59,21 @@ def test_blocking(grpc_stub, grpc_server):
 
 # Asynchronous Stub and Asynchronous Server
 
+@aio_available
 @pytest.mark.asyncio
 async def test_some_async(aio_grpc_stub, aio_grpc_server):
     request = EchoRequest()
     response = await aio_grpc_stub.handler(request)
     assert response.name == f'test-{request.name}'
 
+@aio_available
 @pytest.mark.asyncio
 async def test_error_async(aio_grpc_stub, aio_grpc_server):
     request = EchoRequest()
     with pytest.raises(grpc.RpcError):
         response = await aio_grpc_stub.error_handler(request)
 
+@aio_available
 @pytest.mark.asyncio
 async def test_blocking_async(event_loop, aio_grpc_stub, aio_grpc_server):
     async def call_unblock():
