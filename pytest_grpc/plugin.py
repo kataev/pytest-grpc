@@ -34,12 +34,8 @@ def is_async_node(request):
 # General Server fixtures
 
 @pytest.fixture
-def grpc_addr():
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind(('localhost', 0))
-    ip, port = sock.getsockname()
-    yield f'localhost:{port}'
-    sock.close()
+def grpc_addr(unused_tcp_port):
+    yield f'localhost:{unused_tcp_port}'
 
 
 @pytest.fixture
