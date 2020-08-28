@@ -62,3 +62,18 @@ async def test_error_async(aio_grpc_stub, aio_grpc_server):
     request = EchoRequest()
     with pytest.raises(grpc.RpcError):
         response = await aio_grpc_stub.error_handler(request)
+
+@pytest.mark.asyncio
+async def test_blocking_async(event_loop, aio_grpc_stub, aio_grpc_server):
+    async def call_unblock():
+        await aio_grpc_stub.unblock(Empty())
+
+    async def call_block():
+        async for resp in aio_grpc_stub.blocking(Empty()):
+            pass
+
+    asyncio.gather(
+        call_unblock(),
+        call_unblock(),
+        call_block(),
+    )
