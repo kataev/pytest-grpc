@@ -20,10 +20,16 @@ setup(
     long_description_content_type="text/markdown",
     install_requires=[
         "pytest>=3.6.0",
-        "grpcio>=1.31.0",
-        "grpcio-tools>=1.31.0",
-        "pytest-asyncio",
+        "grpcio",
+        "grpcio-tools",
     ],
+    extras_require={
+        "asyncio": [
+            "grpcio>=1.31.0",
+            "grpcio-tools>=1.31.0",
+            "pytest-asyncio",
+        ]
+    },
     classifiers=[
         "Framework :: Pytest",
         "Intended Audience :: Developers",
