@@ -1,7 +1,7 @@
 import pytest
 import grpc
 import asyncio
-import packaging
+import packaging.version
 import threading
 import pytest_grpc
 
