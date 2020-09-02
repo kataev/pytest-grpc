@@ -58,13 +58,18 @@ def thread_pool(request, grpc_max_workers):
 
 
 @pytest.fixture
-def grpc_server(request, thread_pool, grpc_addr, grpc_add_to_server, grpc_servicer, grpc_interceptors):
+def grpc_server_credentials():
+    return grpc.local_server_credentials()
+
+
+@pytest.fixture
+def grpc_server(request, thread_pool, grpc_addr, grpc_add_to_server, grpc_servicer, grpc_interceptors, grpc_server_credentials):
     if is_async_node(request):
         sync_fail(request)
 
     server = grpc.server(thread_pool, interceptors=grpc_interceptors)
     grpc_add_to_server(grpc_servicer(), server)
-    server.add_insecure_port(grpc_addr)
+    server.add_secure_port(grpc_addr, grpc_server_credentials)
     server.start()
     yield server
     server.stop(grace=None)
@@ -72,12 +77,18 @@ def grpc_server(request, thread_pool, grpc_addr, grpc_add_to_server, grpc_servic
 
 # Synchronous Client fixtures
 
+
 @pytest.fixture
-def grpc_create_channel(request, grpc_addr):
+def grpc_channel_credentials():
+    return grpc.local_channel_credentials()
+
+
+@pytest.fixture
+def grpc_create_channel(request, grpc_addr, grpc_channel_credentials):
     if is_async_node(request):
         sync_fail(request)
 
-    return grpc.insecure_channel(grpc_addr)
+    return grpc.secure_channel(grpc_addr, grpc_channel_credentials)
 
 
 @pytest.fixture
@@ -100,7 +111,7 @@ def grpc_stub(request, grpc_stub_cls, grpc_channel):
 # Asynchronous Server fixtures
 
 @pytest.fixture
-def aio_grpc_server(request, event_loop, grpc_addr, grpc_add_to_server, grpc_servicer, grpc_interceptors):
+def aio_grpc_server(request, event_loop, grpc_addr, grpc_add_to_server, grpc_servicer, grpc_interceptors, grpc_server_credentials):
     if not is_async_node(request):
         async_fail(request)
 
@@ -112,7 +123,7 @@ def aio_grpc_server(request, event_loop, grpc_addr, grpc_add_to_server, grpc_ser
 
     server = aio.server(interceptors=grpc_interceptors)
     grpc_add_to_server(grpc_servicer(), server)
-    server.add_insecure_port(grpc_addr)
+    server.add_secure_port(grpc_addr, grpc_server_credentials)
     event_loop.run_until_complete(run(server))
     yield server
     event_loop.run_until_complete(stop(server))
@@ -121,11 +132,11 @@ def aio_grpc_server(request, event_loop, grpc_addr, grpc_add_to_server, grpc_ser
 # Asynchronous Client fixtures
 
 @pytest.fixture
-def aio_grpc_create_channel(request, grpc_addr):
+def aio_grpc_create_channel(request, grpc_addr, grpc_channel_credentials):
     if not is_async_node(request):
         async_fail(request)
 
-    return aio.insecure_channel(grpc_addr)
+    return aio.secure_channel(grpc_addr, grpc_channel_credentials)
 
 
 @pytest.mark.asyncio
