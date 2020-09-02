@@ -43,6 +43,17 @@ def grpc_interceptors():
     return None
 
 
+@pytest.fixture
+def grpc_channel_credentials():
+    return grpc.local_channel_credentials()
+
+
+@pytest.fixture
+def grpc_server_credentials():
+    return grpc.local_server_credentials()
+
+
+
 # Synchronous Server fixtures
 
 @pytest.fixture(scope="session")
@@ -55,11 +66,6 @@ def thread_pool(request, grpc_max_workers):
     pool = futures.ThreadPoolExecutor(max_workers=grpc_max_workers)
     yield pool
     pool.shutdown(wait=False)
-
-
-@pytest.fixture
-def grpc_server_credentials():
-    return grpc.local_server_credentials()
 
 
 @pytest.fixture
@@ -76,12 +82,6 @@ def grpc_server(request, thread_pool, grpc_addr, grpc_add_to_server, grpc_servic
 
 
 # Synchronous Client fixtures
-
-
-@pytest.fixture
-def grpc_channel_credentials():
-    return grpc.local_channel_credentials()
-
 
 @pytest.fixture
 def grpc_create_channel(request, grpc_addr, grpc_channel_credentials):
