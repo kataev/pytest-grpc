@@ -8,20 +8,22 @@ import inspect
 import asyncio
 
 
-def async_fail(request):
-    pytest.fail(
-        'You are trying to use an asynchronous aio_ fixture with a synchronous test function. ' \
-        'Either remove the aio_ prefix or make the function a coroutine. ' \
-        'Requested fixtures: {}'.format(", ".join(request.fixturenames))
+def assert_async(request):
+    if not is_async_node(request):
+        pytest.fail(
+            'You are trying to use an asynchronous aio_ fixture with a synchronous test function. ' \
+            'Either remove the aio_ prefix or make the function a coroutine. ' \
+            'Requested fixtures: {}'.format(", ".join(request.fixturenames))
+        )
+
+
+def assert_sync(request):
+    if is_async_node(request):
+        pytest.fail(
+            'You are trying to use a synchronous fixture with a asynchronous test coroutine. ' \
+            'Either add the aio_ prefix or make the coroutine a function. ' \
+            'Requested fixtures: {}'.format(", ".join(request.fixturenames))
     )
-
-
-def sync_fail(request):
-    pytest.fail(
-        'You are trying to use a synchronous fixture with a asynchronous test coroutine. ' \
-        'Either add the aio_ prefix or make the coroutine a function. ' \
-        'Requested fixtures: {}'.format(", ".join(request.fixturenames))
-   )
 
 
 def is_async_node(request):
@@ -70,8 +72,7 @@ def thread_pool(request, grpc_max_workers):
 
 @pytest.fixture
 def grpc_server(request, thread_pool, grpc_addr, grpc_add_to_server, grpc_servicer, grpc_interceptors, grpc_server_credentials):
-    if is_async_node(request):
-        sync_fail(request)
+    assert_sync(request)
 
     server = grpc.server(thread_pool, interceptors=grpc_interceptors)
     grpc_add_to_server(grpc_servicer(), server)
@@ -85,16 +86,14 @@ def grpc_server(request, thread_pool, grpc_addr, grpc_add_to_server, grpc_servic
 
 @pytest.fixture
 def grpc_create_channel(request, grpc_addr, grpc_channel_credentials):
-    if is_async_node(request):
-        sync_fail(request)
+    assert_sync(request)
 
     return grpc.secure_channel(grpc_addr, grpc_channel_credentials)
 
 
 @pytest.fixture
 def grpc_channel(request, grpc_create_channel):
-    if is_async_node(request):
-        sync_fail(request)
+    assert_sync(request)
 
     with grpc_create_channel as channel:
         yield channel
@@ -102,8 +101,7 @@ def grpc_channel(request, grpc_create_channel):
 
 @pytest.fixture
 def grpc_stub(request, grpc_stub_cls, grpc_channel, grpc_server):
-    if is_async_node(request):
-        sync_fail(request)
+    assert_sync(request)
 
     return grpc_stub_cls(grpc_channel)
 
@@ -112,8 +110,7 @@ def grpc_stub(request, grpc_stub_cls, grpc_channel, grpc_server):
 
 @pytest.fixture
 def aio_grpc_server(request, event_loop, grpc_addr, grpc_add_to_server, grpc_servicer, grpc_interceptors, grpc_server_credentials):
-    if not is_async_node(request):
-        async_fail(request)
+    assert_async(request)
 
     async def run(server):
         await server.start()
@@ -133,8 +130,7 @@ def aio_grpc_server(request, event_loop, grpc_addr, grpc_add_to_server, grpc_ser
 
 @pytest.fixture
 def aio_grpc_create_channel(request, grpc_addr, grpc_channel_credentials):
-    if not is_async_node(request):
-        async_fail(request)
+    assert_async(request)
 
     return aio.secure_channel(grpc_addr, grpc_channel_credentials)
 
@@ -142,8 +138,7 @@ def aio_grpc_create_channel(request, grpc_addr, grpc_channel_credentials):
 @pytest.mark.asyncio
 @pytest.fixture
 async def aio_grpc_channel(request, event_loop, aio_grpc_create_channel):
-    if not is_async_node(request):
-        async_fail(request)
+    assert_async(request)
 
     async with aio_grpc_create_channel as channel:
         yield channel
@@ -151,9 +146,8 @@ async def aio_grpc_channel(request, event_loop, aio_grpc_create_channel):
 
 @pytest.fixture
 def aio_grpc_stub(request, grpc_stub_cls, aio_grpc_channel, aio_grpc_server):
-    if not is_async_node(request):
-        async_fail(request)
-    
+    assert_async(request)
+
     return grpc_stub_cls(aio_grpc_channel)
 
 
