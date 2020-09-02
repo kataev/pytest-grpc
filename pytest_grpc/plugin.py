@@ -158,5 +158,4 @@ def aio_grpc_stub(request, grpc_stub_cls, aio_grpc_channel, aio_grpc_server):
 
 
 def pytest_addoption(parser):
-    parser.addoption('--grpc-fake-server', action='store_true', dest='grpc-fake')
     parser.addoption('--grpc-max-workers', type=int, dest='grpc-max-workers', default=2)
