@@ -33,19 +33,19 @@ def grpc_stub_cls():
 
 # Synchronous Stub and Synchronous Server
 
-def test_some(grpc_stub, grpc_server):
+def test_some(grpc_stub):
     request = EchoRequest()
     response = grpc_stub.handler(request)
     assert response.name == f'test-{request.name}'
 
 
-def test_error(grpc_stub, grpc_server):
+def test_error(grpc_stub):
     request = EchoRequest()
     with pytest.raises(grpc.RpcError):
         grpc_stub.error_handler(request)
 
 
-def test_blocking(grpc_stub, grpc_server):
+def test_blocking(grpc_stub):
     stream = grpc_stub.blocking(Empty())
     def call_unblock():
         grpc_stub.unblock(Empty())
@@ -61,21 +61,21 @@ def test_blocking(grpc_stub, grpc_server):
 
 @aio_available
 @pytest.mark.asyncio
-async def test_some_async(aio_grpc_stub, aio_grpc_server):
+async def test_some_async(aio_grpc_stub):
     request = EchoRequest()
     response = await aio_grpc_stub.handler(request)
     assert response.name == f'test-{request.name}'
 
 @aio_available
 @pytest.mark.asyncio
-async def test_error_async(aio_grpc_stub, aio_grpc_server):
+async def test_error_async(aio_grpc_stub):
     request = EchoRequest()
     with pytest.raises(grpc.RpcError):
         response = await aio_grpc_stub.error_handler(request)
 
 @aio_available
 @pytest.mark.asyncio
-async def test_blocking_async(event_loop, aio_grpc_stub, aio_grpc_server):
+async def test_blocking_async(aio_grpc_stub):
     async def call_unblock():
         await aio_grpc_stub.unblock(Empty())
         await aio_grpc_stub.unblock(Empty())
@@ -94,10 +94,10 @@ async def test_blocking_async(event_loop, aio_grpc_stub, aio_grpc_server):
 
 @pytest.mark.xfail(strict=True)
 @pytest.mark.asyncio
-async def test_sync_fixture_async_test(grpc_stub, grpc_server):
+async def test_sync_fixture_async_test(grpc_stub):
     pass
 
 
 @pytest.mark.xfail(strict=True)
-def test_async_fixture_sync_test(aio_grpc_stub, aio_grpc_server):
+def test_async_fixture_sync_test(aio_grpc_stub):
     pass

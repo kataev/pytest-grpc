@@ -72,7 +72,7 @@ def grpc_channel_credentials(cert):
     return grpc.ssl_channel_credentials(cert)
 
 
-def test_ssl(grpc_stub, grpc_server):
+def test_ssl(grpc_stub):
     request = EchoRequest()
     response = grpc_stub.handler(request)
     assert response.name == f'test-{request.name}'
@@ -80,7 +80,7 @@ def test_ssl(grpc_stub, grpc_server):
 
 @aio_available
 @pytest.mark.asyncio
-async def test_ssl_async(aio_grpc_stub, aio_grpc_server):
+async def test_ssl_async(aio_grpc_stub):
     request = EchoRequest()
     response = await aio_grpc_stub.handler(request)
     assert response.name == f'test-{request.name}'

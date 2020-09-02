@@ -101,7 +101,7 @@ def grpc_channel(request, grpc_create_channel):
 
 
 @pytest.fixture
-def grpc_stub(request, grpc_stub_cls, grpc_channel):
+def grpc_stub(request, grpc_stub_cls, grpc_channel, grpc_server):
     if is_async_node(request):
         sync_fail(request)
 
@@ -150,7 +150,7 @@ async def aio_grpc_channel(request, event_loop, aio_grpc_create_channel):
 
 
 @pytest.fixture
-def aio_grpc_stub(request, grpc_stub_cls, aio_grpc_channel):
+def aio_grpc_stub(request, grpc_stub_cls, aio_grpc_channel, aio_grpc_server):
     if not is_async_node(request):
         async_fail(request)
     
