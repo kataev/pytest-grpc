@@ -1,1 +1,2 @@
 include protos/pytest_grpc/tests/example.proto
+include pytest_grpc/tests/test_ssl/*.pem

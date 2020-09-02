@@ -26,3 +26,7 @@ publish: protos
 
 .PHONY: upload
 upload: clean publish
+
+.PHONY: certs
+certs:
+	openssl req -x509 -newkey rsa:4096 -nodes -subj '/CN=localhost' -keyout pytest_grpc/tests/test_ssl/key.pem -out pytest_grpc/tests/test_ssl/cert.pem -days 365
