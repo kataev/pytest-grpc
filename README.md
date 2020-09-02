@@ -37,7 +37,7 @@ def test_some(grpc_stub):
 
 ### Asyncio
 
-Just request the `asio_grpc_stub` fixture in an `async def` test.
+Same as above, but request the `asio_grpc_stub` fixture in an `async def` test instead.
 
 ```python
 @pytest.mark.asyncio
@@ -47,11 +47,13 @@ async def test_some_async(aio_grpc_stub):
     assert response.name == f'test-{request.name}'
 ```
 
+**Caveat**: Both client and server must be either synchronous or asynchronous. You cannot mix an asynchronous client with a synchronous server or vice versa.
+
 For a full example, see [`pytest_grpc/tests/test_api.py`](pytest_grpc/tests/test_api.py).
 
 ### SSL credentials
 
-Just define the fixtures `grpc_server_credentials`, and `ssl_channel_credentials`
+Same as above, but additionally define the fixtures `grpc_server_credentials`, and `ssl_channel_credentials`
 
 ```python
 @pytest.fixture
