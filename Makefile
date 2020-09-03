@@ -16,7 +16,7 @@ patch:
 
 .PHONY: protos
 protos:
-	python -m grpc_tools.protoc -Iprotos --python_out=pytest_grpc/tests/ --grpc_python_out=pytest_grpc/tests/ pytest_grpc/tests/example.proto
+	python -m grpc_tools.protoc -Iprotos --python_out=. --grpc_python_out=. pytest_grpc/tests/example.proto
 
 .PHONY: publish
 publish: protos
