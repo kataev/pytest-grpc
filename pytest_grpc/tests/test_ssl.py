@@ -3,19 +3,12 @@ import py
 import os
 import grpc
 import asyncio
-import packaging.version
 import threading
-import pytest_grpc
+from pytest_grpc import aio_available
 
 from .example_pb2 import EchoRequest, Empty
 from .servicer import Servicer
 from .example_pb2_grpc import add_EchoServiceServicer_to_server, EchoServiceStub
-
-
-aio_available = pytest.mark.skipif(
-    packaging.version.parse(grpc.__version__) < packaging.version.parse("1.31.0"),
-    reason="aio test only work with grpcio versions 1.31.0 and later"
-)
 
 
 # Data loading fixtures
