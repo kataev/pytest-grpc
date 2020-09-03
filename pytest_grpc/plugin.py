@@ -86,23 +86,17 @@ def grpc_server(request, thread_pool, grpc_addr, grpc_add_to_server, grpc_servic
 
 @pytest.fixture
 def grpc_create_channel(request, grpc_addr, grpc_channel_credentials):
-    assert_sync(request)
-
     return grpc.secure_channel(grpc_addr, grpc_channel_credentials)
 
 
 @pytest.fixture
 def grpc_channel(request, grpc_create_channel):
-    assert_sync(request)
-
     with grpc_create_channel as channel:
         yield channel
 
 
 @pytest.fixture
 def grpc_stub(request, grpc_stub_cls, grpc_channel, grpc_server):
-    assert_sync(request)
-
     return grpc_stub_cls(grpc_channel)
 
 
@@ -130,24 +124,18 @@ def aio_grpc_server(request, event_loop, grpc_addr, grpc_add_to_server, grpc_ser
 
 @pytest.fixture
 def aio_grpc_create_channel(request, grpc_addr, grpc_channel_credentials):
-    assert_async(request)
-
     return aio.secure_channel(grpc_addr, grpc_channel_credentials)
 
 
 @pytest.mark.asyncio
 @pytest.fixture
-async def aio_grpc_channel(request, event_loop, aio_grpc_create_channel):
-    assert_async(request)
-
+async def aio_grpc_channel(request, aio_grpc_create_channel):
     async with aio_grpc_create_channel as channel:
         yield channel
 
 
 @pytest.fixture
 def aio_grpc_stub(request, grpc_stub_cls, aio_grpc_channel, aio_grpc_server):
-    assert_async(request)
-
     return grpc_stub_cls(aio_grpc_channel)
 
 
