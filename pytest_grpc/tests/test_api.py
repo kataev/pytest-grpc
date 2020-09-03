@@ -10,9 +10,6 @@ from .servicer import Servicer
 from .example_pb2_grpc import add_EchoServiceServicer_to_server, EchoServiceStub
 
 
-
-
-
 @pytest.fixture
 def grpc_add_to_server():
     return add_EchoServiceServicer_to_server
@@ -38,8 +35,10 @@ def test_some(grpc_stub):
 
 def test_error(grpc_stub):
     request = EchoRequest()
-    with pytest.raises(grpc.RpcError):
+    with pytest.raises(grpc.RpcError) as e:
         grpc_stub.error_handler(request)
+
+    assert e.value.code() == grpc.StatusCode.UNKNOWN
 
 
 def test_blocking(grpc_stub):
@@ -67,8 +66,10 @@ async def test_some_async(aio_grpc_stub):
 @pytest.mark.asyncio
 async def test_error_async(aio_grpc_stub):
     request = EchoRequest()
-    with pytest.raises(grpc.RpcError):
+    with pytest.raises(grpc.RpcError) as e:
         response = await aio_grpc_stub.error_handler(request)
+
+    assert e.value.code() == grpc.StatusCode.UNKNOWN
 
 @aio_available
 @pytest.mark.asyncio
