@@ -14,25 +14,16 @@ from .example_pb2_grpc import add_EchoServiceServicer_to_server, EchoServiceStub
 # Data loading fixtures
 
 @pytest.fixture
-def datadir(request):
-    """ Search test assets in test-specific directory. """
-    filename = request.module.__file__
-    test_dir, _ = os.path.splitext(filename)
-
-    return py.path.local(test_dir)
-
-
-@pytest.fixture
 def key(datadir):
     """ SSL private key """
-    with open(datadir.join('key.pem'), 'rb') as f:
+    with open(datadir / 'key.pem', 'rb') as f:
         return f.read()
 
 
 @pytest.fixture
 def cert(datadir):
     """ Self-signed SSL root cert """
-    with open(datadir.join('cert.pem'), 'rb') as f:
+    with open(datadir / 'cert.pem', 'rb') as f:
         return f.read()
 
 

@@ -22,6 +22,7 @@ setup(
         "pytest>=3.6.0",
         "grpcio",
         "grpcio-tools",
+        "pytest-datadir",
     ],
     extras_require={
         "asyncio": [
