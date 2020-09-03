@@ -77,3 +77,17 @@ async def test_ssl_async(aio_grpc_stub):
     request = EchoRequest()
     response = await aio_grpc_stub.handler(request)
     assert response.name == f'test-{request.name}'
+
+
+class TestInvalidCreds:
+    @pytest.fixture
+    def grpc_channel_credentials(self):
+        return grpc.local_channel_credentials()
+
+    def test_invalid_creds(self, grpc_stub):
+        request = EchoRequest()
+
+        with pytest.raises(grpc.RpcError) as e:
+            response = grpc_stub.handler(request)
+
+        assert e.value.code() == grpc.StatusCode.UNAVAILABLE
