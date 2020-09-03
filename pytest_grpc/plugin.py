@@ -55,6 +55,20 @@ def grpc_server_credentials():
     return grpc.local_server_credentials()
 
 
+@pytest.fixture
+def grpc_add_to_servers(grpc_add_to_server):
+    return [grpc_add_to_server, ]
+
+
+@pytest.fixture
+def grpc_servicers(grpc_servicer):
+    return [grpc_servicer, ]
+
+
+@pytest.fixture
+def grpc_stub_classes(grpc_stub_cls):
+    return [grpc_stub_cls, ]
+
 
 # Synchronous Server fixtures
 
@@ -71,11 +85,12 @@ def thread_pool(request, grpc_max_workers):
 
 
 @pytest.fixture
-def grpc_server(request, thread_pool, grpc_addr, grpc_add_to_server, grpc_servicer, grpc_interceptors, grpc_server_credentials):
+def grpc_server(request, thread_pool, grpc_addr, grpc_add_to_servers, grpc_servicers, grpc_interceptors, grpc_server_credentials):
     assert_sync(request)
 
     server = grpc.server(thread_pool, interceptors=grpc_interceptors)
-    grpc_add_to_server(grpc_servicer(), server)
+    for add, servicer in zip(grpc_add_to_servers, grpc_servicers):
+        add(servicer(), server)
     server.add_secure_port(grpc_addr, grpc_server_credentials)
     server.start()
     yield server
@@ -96,14 +111,19 @@ def grpc_channel(request, grpc_create_channel):
 
 
 @pytest.fixture
-def grpc_stub(request, grpc_stub_cls, grpc_channel, grpc_server):
-    return grpc_stub_cls(grpc_channel)
+def grpc_stubs(request, grpc_stub_classes, grpc_channel, grpc_server):
+    return [c(grpc_channel) for c in grpc_stub_classes]
+
+
+@pytest.fixture
+def grpc_stub(grpc_stubs):
+    return grpc_stubs[0]
 
 
 # Asynchronous Server fixtures
 
 @pytest.fixture
-def aio_grpc_server(request, event_loop, grpc_addr, grpc_add_to_server, grpc_servicer, grpc_interceptors, grpc_server_credentials):
+def aio_grpc_server(request, event_loop, grpc_addr, grpc_add_to_servers, grpc_servicers, grpc_interceptors, grpc_server_credentials):
     assert_async(request)
 
     async def run(server):
@@ -113,7 +133,8 @@ def aio_grpc_server(request, event_loop, grpc_addr, grpc_add_to_server, grpc_ser
         await server.stop(grace=None)
 
     server = aio.server(interceptors=grpc_interceptors)
-    grpc_add_to_server(grpc_servicer(), server)
+    for add, servicer in zip(grpc_add_to_servers, grpc_servicers):
+        add(servicer(), server)
     server.add_secure_port(grpc_addr, grpc_server_credentials)
     event_loop.run_until_complete(run(server))
     yield server
@@ -135,8 +156,13 @@ async def aio_grpc_channel(request, aio_grpc_create_channel):
 
 
 @pytest.fixture
-def aio_grpc_stub(request, grpc_stub_cls, aio_grpc_channel, aio_grpc_server):
-    return grpc_stub_cls(aio_grpc_channel)
+def aio_grpc_stubs(request, grpc_stub_classes, aio_grpc_channel, aio_grpc_server):
+    return [c(aio_grpc_channel) for c in grpc_stub_classes]
+
+
+@pytest.fixture
+def aio_grpc_stub(request, aio_grpc_stubs):
+    return aio_grpc_stubs[0]
 
 
 def pytest_addoption(parser):
