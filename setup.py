@@ -18,6 +18,7 @@ setup(
         "pytest11": ["pytest_grpc = pytest_grpc.plugin"]
     },
     description='pytest plugin for grpc',
+    license_files=("LICENSE",),
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=install_requires,
